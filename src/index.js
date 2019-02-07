@@ -12,7 +12,7 @@
 'use strict';
 
 export default class Wunderlist {
-	
+
   constructor(config) {
     this.headers = () => {
       return {
@@ -24,26 +24,24 @@ export default class Wunderlist {
       }
     }
     this.endpoint = 'https://a.wunderlist.com/api/v1/';
-    this.request  = require('request');
+    this.request = require('request');
   }
 
   paths(path) {
-		let options = Object.assign(path, this.headers());
+    let options = Object.assign(path, this.headers());
     return this.promise(options);
   }
 
-  promise(options) {
-    return new Promise( (resolve, reject) => {
-      this.request(options, (err, response, body) => {
-        if (err) {
-          reject(err);
-        }
+  async promise(options) {
+    return await new Promise(async (resolve, reject) => {
+      await this.request(options, (err, response, body) => {
+        if (err) { reject(err); }
 
         if (response) {
-          resolve(response);
+          resolve(typeof response.body === "object" ? response.body : JSON.parse(response.body));
         }
       });
-    });
+    })
   }
 
   getLists() {
@@ -61,7 +59,8 @@ export default class Wunderlist {
       method: 'GET'
     }
 
-    return this.paths(url);  }
+    return this.paths(url);
+  }
 
   createList(title) {
     let url = {
@@ -138,7 +137,7 @@ export default class Wunderlist {
   }
 
   getTask(id) {
-    let url ={
+    let url = {
       url: this.endpoint + 'tasks/' + id,
       method: 'GET'
     }
@@ -146,25 +145,26 @@ export default class Wunderlist {
     return this.paths(url);
   }
 
-  createTask(listId, title, state, starred, due_date) {
+  createTask(task) {
     let url = {
-      url:  this.endpoint + 'tasks',
+      url: this.endpoint + 'tasks',
       method: 'POST',
-      json: {
-        "list_id": listId,
-        "title": title,
-        "completed": state,
-        "starred": starred,
-	"due_date": due_date
-      }
+      json: task
     }
 
     return this.paths(url);
   }
-
+  updateTask(id, revision, body) {
+    let url = {
+      url: this.endpoint + 'tasks/' + id,
+      method: 'PATCH',
+      json: Object.assign(body, {revision: revision})
+    }
+    return this.paths(url);
+  }
   deleteTask(id, revision) {
     let url = {
-      url:  this.endpoint + 'tasks/' + id + '?revision=' + revision,
+      url: this.endpoint + 'tasks/' + id + '?revision=' + revision,
       method: 'DELETE'
     }
 
@@ -173,7 +173,7 @@ export default class Wunderlist {
 
   user() {
     let url = {
-      url:  this.endpoint + 'user',
+      url: this.endpoint + 'user',
       method: 'GET'
     }
 
@@ -188,7 +188,7 @@ export default class Wunderlist {
     }
 
     let url = {
-      url:  this.endpoint + 'avatar?user_id=' + userId + '&size=' + size + '&fallback=' + fallback,
+      url: this.endpoint + 'avatar?user_id=' + userId + '&size=' + size + '&fallback=' + fallback,
       method: 'GET'
     }
 
@@ -199,7 +199,7 @@ export default class Wunderlist {
 
   getMembership() {
     let url = {
-      url:  this.endpoint + 'memberships',
+      url: this.endpoint + 'memberships',
       method: 'GET'
     }
 
@@ -208,7 +208,7 @@ export default class Wunderlist {
 
   addMember(userId, listId, muted) {
     let url = {
-      url:  this.endpoint + 'memberships',
+      url: this.endpoint + 'memberships',
       method: 'POST',
       json: {
         "list_id": listId,
@@ -222,7 +222,7 @@ export default class Wunderlist {
 
   removeMember(userId, muted, revision) {
     let url = {
-      url:  this.endpoint + 'memberships/' + userId,
+      url: this.endpoint + 'memberships/' + userId,
       method: 'DELETE',
       json: {
         "revision": revision
@@ -233,8 +233,8 @@ export default class Wunderlist {
   }
 
   commentsList(listId) {
-    let url =  {
-      url:  this.endpoint + 'task_comments?list_id=' + listId,
+    let url = {
+      url: this.endpoint + 'task_comments?list_id=' + listId,
       method: 'GET'
     }
 
@@ -243,7 +243,7 @@ export default class Wunderlist {
 
   commentsTask(taskId) {
     let url = {
-      url:  this.endpoint + 'task_comments?task_id=' + taskId,
+      url: this.endpoint + 'task_comments?task_id=' + taskId,
       method: 'GET'
     }
 
@@ -252,7 +252,7 @@ export default class Wunderlist {
 
   createComment(taskId, text) {
     let url = {
-      url:  this.endpoint + 'task_comments',
+      url: this.endpoint + 'task_comments',
       method: 'POST',
       json: {
         "task_id": taskId,
@@ -265,7 +265,7 @@ export default class Wunderlist {
 
   subtaskList(listId) {
     let url = {
-      url:  this.endpoint + 'subtasks?list_id=' + listId,
+      url: this.endpoint + 'subtasks?list_id=' + listId,
       method: 'GET'
     }
 
@@ -274,7 +274,7 @@ export default class Wunderlist {
 
   subtaskComment(taskId) {
     let url = {
-      url:  this.endpoint + 'subtasks?task_id=' + taskId,
+      url: this.endpoint + 'subtasks?task_id=' + taskId,
       method: 'GET'
     }
 
@@ -283,7 +283,7 @@ export default class Wunderlist {
 
   subtaskListState(listId, completed) {
     let url = {
-      url:  this.endpoint + 'subtasks?list_id=' + listId + '&completed=' + completed,
+      url: this.endpoint + 'subtasks?list_id=' + listId + '&completed=' + completed,
       method: 'GET'
     }
 
@@ -292,7 +292,7 @@ export default class Wunderlist {
 
   subtaskCommentState(taskId, completed) {
     let url = {
-      url:  this.endpoint + 'subtasks?list_id=' + taskId + '&completed=' + completed,
+      url: this.endpoint + 'subtasks?list_id=' + taskId + '&completed=' + completed,
       method: 'GET'
     }
 
@@ -301,7 +301,7 @@ export default class Wunderlist {
 
   createSubstask(taskId, title, completed) {
     let url = {
-      url:  this.endpoint + 'subtasks',
+      url: this.endpoint + 'subtasks',
       method: 'POST',
       json: {
         "task_id": taskId,
@@ -324,7 +324,7 @@ export default class Wunderlist {
 
   notesList(listId) {
     let url = {
-      url:  this.endpoint + 'notes?list_id=' + listId,
+      url: this.endpoint + 'notes?list_id=' + listId,
       method: 'GET'
     }
 
@@ -333,7 +333,7 @@ export default class Wunderlist {
 
   notesTask(taskId) {
     let url = {
-      url:  this.endpoint + 'notes?task_id=' + taskId,
+      url: this.endpoint + 'notes?task_id=' + taskId,
       method: 'GET'
     }
 
@@ -342,10 +342,10 @@ export default class Wunderlist {
 
   createNote(taskId, content) {
     let url = {
-      url:  this.endpoint + 'notes',
+      url: this.endpoint + 'notes',
       method: 'POST',
       json: {
-	"task_id": taskId,
+        "task_id": taskId,
         "content": content,
       }
     }
@@ -354,7 +354,7 @@ export default class Wunderlist {
   }
 
   deleteNote(noteId, revision) {
-    let url =  {
+    let url = {
       url: this.endpoint + 'notes/' + noteId + '?revision=' + revision,
       method: 'DELETE'
     }
